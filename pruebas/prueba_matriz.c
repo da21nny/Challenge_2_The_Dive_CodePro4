@@ -6,9 +6,11 @@
 
 //Prototipo
 void imprimirMatriz(int[ANCHO][ALTO]);
-void generarMatriz(int[ANCHO][ALTO]);
+void crearLaberinto(int[ANCHO][ALTO]);
+void generarCaminos(int[ANCHO][ALTO], int, int);
 
-void generarMatriz(int laberinto_ficticio[ANCHO][ALTO]){
+
+void crearLaberinto(int laberinto_ficticio[ANCHO][ALTO]){
     int i, j;
     /*if((ancho %= 2) == 0){
         ancho += 1;
@@ -21,6 +23,19 @@ void generarMatriz(int laberinto_ficticio[ANCHO][ALTO]){
             laberinto_ficticio [i][j] = 1;
         }
     }
+}
+
+void intercambio(int *valor_A, int *valor_B){
+    int temp = *valor_A;
+    *valor_A = *valor_B;
+    *valor_B = temp;
+}
+
+void generarCaminos(int laberinto_camino[ANCHO][ALTO], int pos_x, int pos_y){
+    laberinto_camino[pos_x][pos_y] = 0;
+    const direccion[4][2] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
+
+
 }
 
 int main(){
@@ -41,7 +56,7 @@ int main(){
     printf("\n\n");
 
     int laberinto[ANCHO][ALTO];
-    generarMatriz(laberinto);
+    crearLaberinto(laberinto);
     int i, j;
     for(i = 0; i < ANCHO; i++){
         for (j = 0; j < ALTO; j++){
