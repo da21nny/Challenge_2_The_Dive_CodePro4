@@ -1,32 +1,30 @@
 #include <stdio.h>
 #include <string.h>
 
-#define M 11
-
-int ancho = 11;
-int alto = 11;
-int i, j;
+#define ANCHO 11
+#define ALTO 11
 
 //Prototipo
-void imprimirMatriz(int[M][M]);
-void generarMatriz(int[ancho][alto]);
+void imprimirMatriz(int[ANCHO][ALTO]);
+void generarMatriz(int[ANCHO][ALTO]);
 
-void generarMatriz(int laberinto_ficticio[ancho][alto]){
+void generarMatriz(int laberinto_ficticio[ANCHO][ALTO]){
+    int i, j;
     /*if((ancho %= 2) == 0){
         ancho += 1;
     }
     if((alto %= 2) == 0){
         alto += 1;
     }*/
-    for(i = 0; i < ancho; i++){
-        for(j = 0; j < alto; j++){
+    for(i = 0; i < ANCHO; i++){
+        for(j = 0; j < ALTO; j++){
             laberinto_ficticio [i][j] = 1;
         }
     }
 }
 
 int main(){
-    int matriz_A[M][M] = {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    int matriz_A[ANCHO][ALTO] = {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
               {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
               {1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1},
               {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1},
@@ -42,10 +40,11 @@ int main(){
     imprimirMatriz(matriz_A);
     printf("\n\n");
 
-    int laberinto[ancho][alto];
+    int laberinto[ANCHO][ALTO];
     generarMatriz(laberinto);
-    for(i = 0; i < ancho; i++){
-        for (j = 0; j < alto; j++){
+    int i, j;
+    for(i = 0; i < ANCHO; i++){
+        for (j = 0; j < ALTO; j++){
             printf("%d", laberinto[i][j]);
         }
         printf("\n");
@@ -53,10 +52,11 @@ int main(){
     return 0;
 }
 
-void imprimirMatriz(int matriz_B[M][M]){
-    for(i = 0; i < M; i++){
+void imprimirMatriz(int matriz_B[ANCHO][ALTO]){
+    int i, j;
+    for(i = 0; i < ANCHO; i++){
         char dibujo[80] = "";
-        for (j = 0; j < M; j++){
+        for (j = 0; j < ALTO; j++){
             if (matriz_B[i][j] == 1){
                 strncat(dibujo, "⬜️", 7); 
             }
