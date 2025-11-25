@@ -1,39 +1,70 @@
 #include <stdio.h>
+#include <string.h>
 
-// Prototipo de la función para calcular el factorial
-long long calcular_factorial(int numero);
+#define M 11
 
-int main() {
-    int numero_ingresado;
+int ancho = 11;
+int alto = 11;
+int i, j;
 
-    // Se solicita la entrada (Estructura de Secuencia)
-    printf("Ingrese un número entero positivo: ");
-    scanf("%d", &numero_ingresado);
+//Prototipo
+void imprimirMatriz(int[M][M]);
+void generarMatriz(int[ancho][alto]);
 
-    // Selección (Estructura de Decisión)
-    if (numero_ingresado < 0) {
-        printf("Error: El factorial no está definido para números negativos.\n");
-    } else {
-        // Llamada a la función
-        long long resultado_factorial = calcular_factorial(numero_ingresado);
-        printf("El factorial de %d es: %lld\n", numero_ingresado, resultado_factorial);
+void generarMatriz(int laberinto_ficticio[ancho][alto]){
+    /*if((ancho %= 2) == 0){
+        ancho += 1;
     }
+    if((alto %= 2) == 0){
+        alto += 1;
+    }*/
+    for(i = 0; i < ancho; i++){
+        for(j = 0; j < alto; j++){
+            laberinto_ficticio [i][j] = 1;
+        }
+    }
+}
 
+int main(){
+    int matriz_A[M][M] = {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+              {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+              {1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1},
+              {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+              {1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1},
+              {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+              {1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1},
+              {1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1},
+              {1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1},
+              {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+              {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+
+    printf("\nMatriz\n");
+    imprimirMatriz(matriz_A);
+    printf("\n\n");
+
+    int laberinto[ancho][alto];
+    generarMatriz(laberinto);
+    for(i = 0; i < ancho; i++){
+        for (j = 0; j < alto; j++){
+            printf("%d", laberinto[i][j]);
+        }
+        printf("\n");
+    }
     return 0;
 }
 
-// Implementación de la función (Modularidad)
-long long calcular_factorial(int numero) {
-    if (numero == 0 || numero == 1) {
-        return 1;
+void imprimirMatriz(int matriz_B[M][M]){
+    for(i = 0; i < M; i++){
+        char dibujo[80] = "";
+        for (j = 0; j < M; j++){
+            if (matriz_B[i][j] == 1){
+                strncat(dibujo, "⬜️", 7); 
+            }
+            else{
+                strncat(dibujo, "  ", 3);
+            }
+        }
+        printf("%s\n", dibujo);
     }
-
-    long long factorial = 1;
-    
-    // Iteración (Estructura de Bucle)
-    for (int i = 2; i <= numero; i++) {
-        factorial *= i; // Usando notación abreviada
-    }
-
-    return factorial;
 }
+
