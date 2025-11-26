@@ -3,20 +3,36 @@
 #include <stdlib.h>
 #include <time.h>
 
-//#define ANCHO 11
-//#define ALTO 11
-
+// Variables Globales
 int **laberinto;
 int ancho_global, alto_global;
 
-//Prototipo
-void imprimirMatriz(int **, int, int);
-int **crearLaberinto(int, int);
-
+// Estructura
 typedef struct{
     int dir_x;
     int dir_y;
 } Coordenadas;
+
+//Prototipo
+void intercambioCoordenadas(Coordenadas *, Coordenadas *);
+void mezclarCoordenadas(Coordenadas *, size_t);
+void generarCaminos(int, int);
+int **crearLaberinto(int, int);
+void liberar_laberinto(int **, int );
+void imprimirMatriz(int **, int, int);
+
+// Funcion Principal o MAIN
+int main(){
+    srand(time(NULL));
+
+    int **laberinto = crearLaberinto(10, 10);
+
+    imprimirMatriz(laberinto, ancho_global, alto_global);
+
+    liberar_laberinto(laberinto, alto_global);
+
+    return 0;
+}
 
 void intercambioCoordenadas(Coordenadas *dir_A, Coordenadas *dir_B){
         Coordenadas temp = *dir_A;
@@ -75,23 +91,11 @@ int **crearLaberinto(int ancho, int alto){
     return laberinto;
 }
 
-void liberar_laberinto(int **laberinto, int alto) {
+void liberar_laberinto(int **laberinto, int alto){
     for (size_t i = 0; i < alto; i++) {
         free(laberinto[i]);
     }
     free(laberinto);
-}
-
-int main(){
-    srand(time(NULL));
-
-    int **laberinto = crearLaberinto(10, 10);
-
-    imprimirMatriz(laberinto, ancho_global, alto_global);
-
-    liberar_laberinto(laberinto, alto_global);
-
-    return 0;
 }
 
 void imprimirMatriz(int **laberinto, int ancho, int alto){
