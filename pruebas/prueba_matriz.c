@@ -1,85 +1,105 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-#define ANCHO 11
-#define ALTO 11
+//#define ANCHO 11
+//#define ALTO 11
+
+int **laberinto;
+int ancho_global, alto_global;
 
 //Prototipo
-void imprimirMatriz(int[ANCHO][ALTO]);
-void crearLaberinto(int[ANCHO][ALTO]);
-void generarCaminos(int[ANCHO][ALTO], int, int);
+void imprimirMatriz(int **, int, int);
+int **crearLaberinto(int, int);
 
+typedef struct{
+    int dir_x;
+    int dir_y;
+} Coordenadas;
 
-void crearLaberinto(int laberinto_ficticio[ANCHO][ALTO]){
-    int i, j;
-    /*if((ancho %= 2) == 0){
-        ancho += 1;
+void mezclarCoordenadas(Coordenadas *dir, int tamanho){
+    for(int i = tamanho - 1; i > 0; i--){
+        int j = rand() % (i + 1);
+        Coordenadas temp = dir[i];
+        dir[i] = dir[j];
+        dir[j] = temp;
     }
-    if((alto %= 2) == 0){
-        alto += 1;
-    }*/
-    for(i = 0; i < ANCHO; i++){
-        for(j = 0; j < ALTO; j++){
-            laberinto_ficticio [i][j] = 1;
+}
+
+void generarCaminos(int pos_y, int pos_x){
+    laberinto[pos_y][pos_x] = 0;
+
+    Coordenadas direccion[] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
+
+    mezclarCoordenadas(direccion, 4);
+
+    for(int i = 0; i < 4; i++){
+        int dirX = direccion[i].dir_x;
+        int dirY = direccion[i].dir_y;
+        int newX = pos_x + dirX;
+        int newY = pos_y + dirY;
+        
+        if (newX >= 1 && newX < ancho_global - 1 && newY >= 1 && newY < alto_global - 1){
+            if(laberinto[newY][newX] == 1){
+                laberinto[pos_y + dirY/2][pos_x + dirX/2] = 0;
+                generarCaminos(newY, newX);
+            }
         }
     }
 }
 
-void intercambio(int *valor_A, int *valor_B){
-    int temp = *valor_A;
-    *valor_A = *valor_B;
-    *valor_B = temp;
+int **crearLaberinto(int ancho, int alto){
+    if(ancho % 2 == 0) ancho += 1;
+    if(alto % 2 == 0) alto += 1;
+    
+    ancho_global = ancho;
+    alto_global = alto;
+
+    laberinto = (int **)malloc(alto * sizeof(int *));
+    for(int i = 0; i < alto; i++){
+        laberinto[i] = (int *)malloc(ancho * sizeof(int));
+        for(int j = 0; j < ancho; j++){
+            laberinto[i][j] = 1;
+        }
+    }
+    int inicio_x = 1, inicio_y = 1;
+    generarCaminos(inicio_y, inicio_x);
+
+    return laberinto;
 }
 
-void generarCaminos(int laberinto_camino[ANCHO][ALTO], int pos_x, int pos_y){
-    laberinto_camino[pos_x][pos_y] = 0;
-    const direccion[4][2] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
-
-
+void liberar_laberinto(int **laberinto, int alto) {
+    for (int i = 0; i < alto; i++) {
+        free(laberinto[i]);
+    }
+    free(laberinto);
 }
 
 int main(){
-    int matriz_A[ANCHO][ALTO] = {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-              {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-              {1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1},
-              {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1},
-              {1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1},
-              {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1},
-              {1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1},
-              {1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1},
-              {1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1},
-              {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-              {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+    int **laberinto = crearLaberinto(10, 10);
 
-    printf("\nMatriz\n");
-    imprimirMatriz(matriz_A);
-    printf("\n\n");
+    imprimirMatriz(laberinto, ancho_global, alto_global);
 
-    int laberinto[ANCHO][ALTO];
-    crearLaberinto(laberinto);
-    int i, j;
-    for(i = 0; i < ANCHO; i++){
-        for (j = 0; j < ALTO; j++){
-            printf("%d", laberinto[i][j]);
-        }
-        printf("\n");
-    }
+    liberar_laberinto(laberinto, alto_global);
+
     return 0;
 }
 
-void imprimirMatriz(int matriz_B[ANCHO][ALTO]){
-    int i, j;
-    for(i = 0; i < ANCHO; i++){
-        char dibujo[80] = "";
-        for (j = 0; j < ALTO; j++){
-            if (matriz_B[i][j] == 1){
+void imprimirMatriz(int **laberinto, int ancho, int alto){
+    for(int i = 0; i < alto; i++){
+    //char dibujo[200] = "";
+        for (int j = 0; j < ancho; j++){
+            
+            printf("%s", laberinto[i][j] == 1 ? "⬜️" : "  ");
+            /*if (laberinto[i][j] == 1){
                 strncat(dibujo, "⬜️", 7); 
             }
             else{
                 strncat(dibujo, "  ", 3);
-            }
+            }*/
         }
-        printf("%s\n", dibujo);
+        printf("\n");
+        //printf("%s\n", dibujo);
     }
 }
 
