@@ -24,8 +24,16 @@ void imprimirMatriz(int **, int, int);
 // Funcion Principal o MAIN
 int main(){
     srand(time(NULL));
+    int ancho_usuario, alto_usuario;
 
-    int **laberinto = crearLaberinto(10, 10);
+    printf("Bienvenido al juego del Laberinto.\nIngrese Ancho y Alto para Definir el Laberinto\n");
+    printf("Ingrese Ancho : ");
+    scanf("%d", &ancho_usuario);
+    printf("Ingrese Alto : ");
+    scanf("%d", &alto_usuario);
+
+
+    int **laberinto = crearLaberinto(ancho_usuario, alto_usuario);
 
     imprimirMatriz(laberinto, ancho_global, alto_global);
 
