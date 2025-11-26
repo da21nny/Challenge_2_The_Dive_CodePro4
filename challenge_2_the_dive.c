@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 //#define ANCHO 11
 //#define ALTO 11
@@ -17,12 +18,16 @@ typedef struct{
     int dir_y;
 } Coordenadas;
 
-void mezclarCoordenadas(Coordenadas *dir, int tamanho){
-    for(int i = tamanho - 1; i > 0; i--){
-        int j = rand() % (i + 1);
-        Coordenadas temp = dir[i];
-        dir[i] = dir[j];
-        dir[j] = temp;
+void intercambioCoordenadas(Coordenadas *dir_A, Coordenadas *dir_B){
+        Coordenadas temp = *dir_A;
+        *dir_A = *dir_B;
+        *dir_B = temp;
+}
+
+void mezclarCoordenadas(Coordenadas dir[], size_t tamanho){
+    for(size_t i = 0; i < tamanho - 1; i++){
+        size_t j = i + (rand() % (tamanho - i));
+        intercambioCoordenadas(&dir[i], &dir[j]);
     }
 }
 
@@ -31,9 +36,11 @@ void generarCaminos(int pos_y, int pos_x){
 
     Coordenadas direccion[] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
 
-    mezclarCoordenadas(direccion, 4);
+    size_t tam = sizeof(direccion) / sizeof(direccion[0]);
 
-    for(int i = 0; i < 4; i++){
+    mezclarCoordenadas(direccion, tam);
+
+    for(size_t i = 0; i < tam; i++){
         int dirX = direccion[i].dir_x;
         int dirY = direccion[i].dir_y;
         int newX = pos_x + dirX;
@@ -56,9 +63,9 @@ int **crearLaberinto(int ancho, int alto){
     alto_global = alto;
 
     laberinto = (int **)malloc(alto * sizeof(int *));
-    for(int i = 0; i < alto; i++){
+    for(size_t i = 0; i < alto; i++){
         laberinto[i] = (int *)malloc(ancho * sizeof(int));
-        for(int j = 0; j < ancho; j++){
+        for(size_t j = 0; j < ancho; j++){
             laberinto[i][j] = 1;
         }
     }
@@ -69,13 +76,15 @@ int **crearLaberinto(int ancho, int alto){
 }
 
 void liberar_laberinto(int **laberinto, int alto) {
-    for (int i = 0; i < alto; i++) {
+    for (size_t i = 0; i < alto; i++) {
         free(laberinto[i]);
     }
     free(laberinto);
 }
 
 int main(){
+    srand(time(NULL));
+
     int **laberinto = crearLaberinto(10, 10);
 
     imprimirMatriz(laberinto, ancho_global, alto_global);
@@ -87,18 +96,10 @@ int main(){
 
 void imprimirMatriz(int **laberinto, int ancho, int alto){
     for(int i = 0; i < alto; i++){
-    //char dibujo[200] = "";
-        for (int j = 0; j < ancho; j++){
-            
+        for (int j = 0; j < ancho; j++){            
             printf("%s", laberinto[i][j] == 1 ? "⬜️" : "  ");
-            /*if (laberinto[i][j] == 1){
-                strncat(dibujo, "⬜️", 7); 
-            }
-            else{
-                strncat(dibujo, "  ", 3);
-            }*/
         }
         printf("\n");
-        //printf("%s\n", dibujo);
     }
 }
+
