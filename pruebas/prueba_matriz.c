@@ -20,6 +20,7 @@ void generarCaminos(int, int);
 int **crearLaberinto(int, int);
 void liberar_laberinto(int **, int );
 void imprimirMatriz(int **, int, int, Coordenadas, Coordenadas);
+void movimientosValidos(int **, int []);
 
 // Funcion Principal o MAIN
 int main(){
@@ -126,3 +127,26 @@ void imprimirMatriz(int **laberinto, int ancho, int alto, Coordenadas entrada, C
     }
 }
 
+void movimientosValidos(int **laberinto, int posicion[]){
+    Coordenadas movimientos[] = {{0,1}, {0,-1}, {1,0}, {-1,0}};
+    Coordenadas validos[] = {};
+
+    size_t tam_mov = sizeof(movimientos) / sizeof(movimientos[0]);
+    size_t tam_lab = sizeof(laberinto) / sizeof(laberinto[0]);
+
+    for(size_t i = 0; i < tam_mov; i++){
+        int dirX = movimientos[i].dir_x;
+        int dirY = movimientos[i].dir_y;
+        int newX = posicion[0] + dirX;
+        int newY = posicion[1] + dirY;
+
+        if(newX >= 0 && newX < tam_lab && newY >= 0 && newY < tam_lab){
+            if(laberinto[newX][newY] == 0){
+                //validos->dir_x = newX;
+                //validos->dir_y = newY;
+                validos[i].dir_x = newX;
+                validos[i].dir_y = newY;
+            }
+        }
+    }
+}
