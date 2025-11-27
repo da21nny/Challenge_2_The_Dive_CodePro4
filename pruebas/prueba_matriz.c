@@ -19,7 +19,7 @@ void mezclarCoordenadas(Coordenadas *, size_t);
 void generarCaminos(int, int);
 int **crearLaberinto(int, int);
 void liberar_laberinto(int **, int );
-void imprimirMatriz(int **, int, int);
+void imprimirMatriz(int **, int, int, Coordenadas, Coordenadas);
 
 // Funcion Principal o MAIN
 int main(){
@@ -32,10 +32,12 @@ int main(){
     printf("Ingrese Alto : ");
     scanf("%d", &alto_usuario);
 
-
     int **laberinto = crearLaberinto(ancho_usuario, alto_usuario);
 
-    imprimirMatriz(laberinto, ancho_global, alto_global);
+    Coordenadas entrada = {1, 1};
+    Coordenadas salida = {ancho_global - 2, alto_global - 2};
+
+    imprimirMatriz(laberinto, ancho_global, alto_global, entrada, salida);
 
     liberar_laberinto(laberinto, alto_global);
 
@@ -106,10 +108,19 @@ void liberar_laberinto(int **laberinto, int alto){
     free(laberinto);
 }
 
-void imprimirMatriz(int **laberinto, int ancho, int alto){
+void imprimirMatriz(int **laberinto, int ancho, int alto, Coordenadas entrada, Coordenadas salida){
     for(int i = 0; i < alto; i++){
         for (int j = 0; j < ancho; j++){            
-            printf("%s", laberinto[i][j] == 1 ? "⬜️" : "  ");
+            //printf("%s", laberinto[i][j] == 1 ? "⬜️" : "  ");
+            if (i == entrada.dir_x && j == entrada.dir_y){
+                printf("🚪");
+            }
+            else if (i == salida.dir_x && j == salida.dir_y){
+                printf("🏁");
+            }
+            else{
+                printf("%s", laberinto[i][j] == 1 ? "⬜️" : "  ");
+            }
         }
         printf("\n");
     }
