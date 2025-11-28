@@ -28,6 +28,7 @@ int main(){
     int ancho_usuario, alto_usuario;
 
     printf("Bienvenido al juego del Laberinto.\nIngrese Ancho y Alto para Definir el Laberinto\n");
+    printf("Entrada : '🚪' - Salida : '🏁' - Pared: '⬜️' - Camino : '  '\n");
     printf("Ingrese Ancho : ");
     scanf("%d", &ancho_usuario);
     printf("Ingrese Alto : ");
@@ -113,10 +114,10 @@ void imprimirMatriz(int **laberinto, int ancho, int alto, Coordenadas entrada, C
     for(int i = 0; i < alto; i++){
         for (int j = 0; j < ancho; j++){            
             //printf("%s", laberinto[i][j] == 1 ? "⬜️" : "  ");
-            if (i == entrada.dir_x && j == entrada.dir_y){
+            if (i == entrada.dir_y && j == entrada.dir_x){
                 printf("🚪");
             }
-            else if (i == salida.dir_x && j == salida.dir_y){
+            else if (i == salida.dir_y && j == salida.dir_x){
                 printf("🏁");
             }
             else{
