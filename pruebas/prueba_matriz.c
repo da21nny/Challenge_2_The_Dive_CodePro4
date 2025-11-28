@@ -25,14 +25,30 @@ void movimientosValidos(int **, int []);
 // Funcion Principal o MAIN
 int main(){
     srand(time(NULL));
-    int ancho_usuario, alto_usuario;
+
+    int ancho_usuario;
+    int alto_usuario;
+    int num;
 
     printf("Bienvenido al juego del Laberinto.\nIngrese Ancho y Alto para Definir el Laberinto\n");
     printf("Entrada : '🚪' - Salida : '🏁' - Pared: '⬜️' - Camino : '  '\n");
-    printf("Ingrese Ancho : ");
-    scanf("%d", &ancho_usuario);
-    printf("Ingrese Alto : ");
-    scanf("%d", &alto_usuario);
+
+    printf("Menu:\n1. Para ingresar ancho y alto del Laberinto\n2. Para mostrar laberinto de tamaño fijo (10x10)\n");
+    do{
+        printf("Elija 1 o 2 : ");
+        scanf("%d", &num);
+        if(num == 1){
+            printf("Ingrese Ancho : ");
+            scanf("%d", &ancho_usuario);
+            printf("Ingrese Alto : ");
+            scanf("%d", &alto_usuario);
+        } else if(num == 2){
+            ancho_usuario = 10;
+            alto_usuario = 10;
+        } else{
+            printf("Numero incorrecto, ingrese de vuelta.");
+        }
+    } while (num > 3);    
 
     int **laberinto = crearLaberinto(ancho_usuario, alto_usuario);
 
@@ -64,11 +80,11 @@ void generarCaminos(int pos_y, int pos_x){
 
     Coordenadas direccion[] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
 
-    size_t tam = sizeof(direccion) / sizeof(direccion[0]);
+    size_t tam_dir = sizeof(direccion) / sizeof(direccion[0]);
 
-    mezclarCoordenadas(direccion, tam);
+    mezclarCoordenadas(direccion, tam_dir);
 
-    for(size_t i = 0; i < tam; i++){
+    for(size_t i = 0; i < tam_dir; i++){
         int dirX = direccion[i].dir_x;
         int dirY = direccion[i].dir_y;
         int newX = pos_x + dirX;
