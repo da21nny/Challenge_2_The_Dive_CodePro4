@@ -3,24 +3,27 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Variables Globales
-int **laberinto;
-int ancho_global, alto_global;
-
 // Estructura
 typedef struct{
     int dir_x;
     int dir_y;
 } Coordenadas;
 
+// Variables Globales
+int **laberinto;
+int ancho_global, alto_global;
+Coordenadas direccion[] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
+Coordenadas movimientos[] = {{0,1}, {0,-1}, {1,0}, {-1,0}};
+
 //Prototipo
-void intercambioCoordenadas(Coordenadas *, Coordenadas *);
-void mezclarCoordenadas(Coordenadas *, size_t);
-void generarCaminos(int, int);
-int **crearLaberinto(int, int);
+void intercambio_coordenadas(Coordenadas *, Coordenadas *);
+void mezclar_coordenadas(Coordenadas *, size_t);
+void generar_caminos(int, int);
+void romper_paredes(int, int);
+int **crear_laberinto(int, int);
 void liberar_laberinto(int **, int );
-void imprimirMatriz(int **, int, int, Coordenadas, Coordenadas);
-void movimientosValidos(int **, int []);
+void imprimir_matriz(int **, int, int, Coordenadas, Coordenadas);
+void movimientos_validos(int **, int []);
 
 // Funcion Principal o MAIN
 int main(){
@@ -46,43 +49,41 @@ int main(){
             ancho_usuario = 10;
             alto_usuario = 10;
         } else{
-            printf("Numero incorrecto, ingrese de vuelta.");
+            printf("Numero incorrecto, ingrese de vuelta.\n");
         }
     } while (num > 3);    
 
-    int **laberinto = crearLaberinto(ancho_usuario, alto_usuario);
+    int **laberinto = crear_laberinto(ancho_usuario, alto_usuario);
 
     Coordenadas entrada = {1, 1};
     Coordenadas salida = {ancho_global - 2, alto_global - 2};
 
-    imprimirMatriz(laberinto, ancho_global, alto_global, entrada, salida);
+    imprimir_matriz(laberinto, ancho_global, alto_global, entrada, salida);
 
     liberar_laberinto(laberinto, alto_global);
 
     return 0;
 }
 
-void intercambioCoordenadas(Coordenadas *dir_A, Coordenadas *dir_B){
+void intercambio_coordenadas(Coordenadas *dir_A, Coordenadas *dir_B){
         Coordenadas temp = *dir_A;
         *dir_A = *dir_B;
         *dir_B = temp;
 }
 
-void mezclarCoordenadas(Coordenadas dir[], size_t tamanho){
+void mezclar_coordenadas(Coordenadas dir[], size_t tamanho){
     for(size_t i = 0; i < tamanho - 1; i++){
         size_t j = i + (rand() % (tamanho - i));
-        intercambioCoordenadas(&dir[i], &dir[j]);
+        intercambio_coordenadas(&dir[i], &dir[j]);
     }
 }
 
-void generarCaminos(int pos_y, int pos_x){
+void generar_caminos(int pos_y, int pos_x){
     laberinto[pos_y][pos_x] = 0;
-
-    Coordenadas direccion[] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
 
     size_t tam_dir = sizeof(direccion) / sizeof(direccion[0]);
 
-    mezclarCoordenadas(direccion, tam_dir);
+    mezclar_coordenadas(direccion, tam_dir);
 
     for(size_t i = 0; i < tam_dir; i++){
         int dirX = direccion[i].dir_x;
@@ -93,13 +94,37 @@ void generarCaminos(int pos_y, int pos_x){
         if (newX >= 1 && newX < ancho_global - 1 && newY >= 1 && newY < alto_global - 1){
             if(laberinto[newY][newX] == 1){
                 laberinto[pos_y + dirY/2][pos_x + dirX/2] = 0;
-                generarCaminos(newY, newX);
+                generar_caminos(newY, newX);
             }
         }
     }
 }
 
-int **crearLaberinto(int ancho, int alto){
+void romper_paredes(int ancho, int alto){
+    int cantidad = (ancho * alto) / 15;
+    for(size_t i = 0; i < cantidad; i++){
+        int posX = (rand() % (ancho - 2)) + 1;
+        int posY = (rand() % (alto - 2)) + 1;
+        if(laberinto[posY][posX] == 1){
+            int libres = 0;
+            size_t tam_mov = sizeof(movimientos) / sizeof(movimientos[0]);
+            for(size_t k = 0; k < tam_mov; k++){
+                int dirX = movimientos[k].dir_x;
+                int dirY = movimientos[k].dir_y;
+                int newX = posX + dirX;
+                int newY = posY + dirY;
+                if(laberinto[newY][newX] == 0){
+                    libres++;
+                }
+            }
+            if(libres >= 1 && libres <= 2){
+                laberinto[posY][posX] = 0;
+            }
+        }
+    }
+}
+
+int **crear_laberinto(int ancho, int alto){
     if(ancho % 2 == 0) ancho += 1;
     if(alto % 2 == 0) alto += 1;
     
@@ -114,7 +139,9 @@ int **crearLaberinto(int ancho, int alto){
         }
     }
     int inicio_x = 1, inicio_y = 1;
-    generarCaminos(inicio_y, inicio_x);
+    generar_caminos(inicio_y, inicio_x);
+
+    romper_paredes(ancho, alto);
 
     return laberinto;
 }
@@ -126,7 +153,8 @@ void liberar_laberinto(int **laberinto, int alto){
     free(laberinto);
 }
 
-void imprimirMatriz(int **laberinto, int ancho, int alto, Coordenadas entrada, Coordenadas salida){
+void imprimir_matriz(int **laberinto, int ancho, int alto, Coordenadas entrada, Coordenadas salida){
+    printf("\nLaberinto %d x %d\n", ancho, alto);
     for(int i = 0; i < alto; i++){
         for (int j = 0; j < ancho; j++){            
             //printf("%s", laberinto[i][j] == 1 ? "⬜️" : "  ");
@@ -142,10 +170,10 @@ void imprimirMatriz(int **laberinto, int ancho, int alto, Coordenadas entrada, C
         }
         printf("\n");
     }
+    printf("\nObs: Se imprime un Laberinto de medida (Ancho + 1) x (Alto + 1) para que tenga paredes exteriores\n");
 }
 
-void movimientosValidos(int **laberinto, int posicion[]){
-    Coordenadas movimientos[] = {{0,1}, {0,-1}, {1,0}, {-1,0}};
+void movimientos_validos(int **laberinto, int posicion[]){
     Coordenadas validos[] = {};
 
     size_t tam_mov = sizeof(movimientos) / sizeof(movimientos[0]);
