@@ -2,11 +2,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdbool.h>
 
 // Estructura
 typedef struct{
     int dir_x;
     int dir_y;
+    int dist;
 } Coordenadas;
 
 // Variables Globales
@@ -24,6 +26,8 @@ int **crear_laberinto(int, int);
 void liberar_laberinto(int **, int );
 void imprimir_matriz(int **, int, int, Coordenadas, Coordenadas);
 void movimientos_validos(int **, int []);
+bool es_valido(int , int , int , int , bool **);
+void bfs(Coordenadas, Coordenadas, int, int);
 
 // Funcion Principal o MAIN
 int main(){
@@ -57,6 +61,8 @@ int main(){
 
     Coordenadas entrada = {1, 1};
     Coordenadas salida = {ancho_global - 2, alto_global - 2};
+
+    bfs(entrada, salida, ancho_global, alto_global);
 
     imprimir_matriz(laberinto, ancho_global, alto_global, entrada, salida);
 
@@ -164,6 +170,9 @@ void imprimir_matriz(int **laberinto, int ancho, int alto, Coordenadas entrada, 
             else if (i == salida.dir_y && j == salida.dir_x){
                 printf("🏁");
             }
+            else if(laberinto[i][j] == 2){
+                printf("🟩");
+            }
             else{
                 printf("%s", laberinto[i][j] == 1 ? "⬜️" : "  ");
             }
@@ -194,4 +203,94 @@ void movimientos_validos(int **laberinto, int posicion[]){
             }
         }
     }
+}
+
+bool es_valido(int fila, int col, int ancho_global, int alto_global, bool **visitado){
+    if(fila < 0 || fila >= alto_global || col < 0 || col >= ancho_global){
+        return false;
+    }
+    if(laberinto[fila][col] == 1){
+        return false;
+    }
+    if(visitado[fila][col]){
+        return false;
+    }
+    return true;
+}
+
+void bfs(Coordenadas entrada, Coordenadas salida, int ancho_global, int alto_global){
+    Coordenadas cola[ancho_global * alto_global];
+    int frente = 0;
+    int atras = 0;
+
+    bool **visitado = (bool **)malloc(alto_global * sizeof(bool *));
+    Coordenadas **caminos = (Coordenadas **)malloc(alto_global * sizeof(Coordenadas *));
+
+    for(size_t k = 0; k < (size_t)alto_global; k++){
+        visitado[k] = (bool *)calloc(ancho_global, sizeof(bool));
+        caminos[k] = (Coordenadas *)malloc(ancho_global * sizeof(Coordenadas));
+        for(size_t j = 0; j < (size_t)ancho_global; j++){
+            caminos[k][j].dir_x = -1;
+            caminos[k][j].dir_y = -1;
+        }
+    }
+
+    visitado[entrada.dir_y][entrada.dir_x] = true;
+    entrada.dist = 0;
+    cola[atras++] = entrada;
+
+    int distancia_final = -1;
+    bool camino_encontrado = false;
+
+    while (frente < atras){
+        Coordenadas actual = cola[frente++];
+
+        if(actual.dir_x == salida.dir_x && actual.dir_y == salida.dir_y){
+            distancia_final = actual.dist;
+            camino_encontrado = true;
+            break;
+        }
+
+        size_t tam_mov = sizeof(movimientos) / sizeof(movimientos[0]);
+
+        for(size_t i = 0; i < tam_mov; i++){
+            int newFila = actual.dir_y + movimientos[i].dir_y;
+            int newCol = actual.dir_x + movimientos[i].dir_x; 
+
+            if(es_valido(newFila, newCol, ancho_global, alto_global, visitado)){
+                visitado[newFila][newCol] = true;
+
+                caminos[newFila][newCol].dir_x = actual.dir_x;
+                caminos[newFila][newCol].dir_y = actual.dir_y;
+
+                Coordenadas vecino;
+                vecino.dir_x = newCol;
+                vecino.dir_y = newFila;
+                vecino.dist = actual.dist + 1;
+                cola[atras++] = vecino;
+            }
+        }
+    }
+
+    if(camino_encontrado){
+        Coordenadas temp = salida;
+        while(!(temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y)){
+            temp = caminos[temp.dir_y][temp.dir_x];
+        }
+
+        temp = salida;
+        while(!(temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y)){
+            laberinto[temp.dir_y][temp.dir_x] = 2;
+            temp = caminos[temp.dir_y][temp.dir_x];
+        }
+        laberinto[entrada.dir_y][entrada.dir_x] = 2;
+    }
+    for(size_t i = 0; i < (size_t)alto_global; i++){
+        free(visitado[i]);
+        free(caminos[i]);
+    }
+    free(visitado);
+    free(caminos);
+
+    printf("El camino mas corto tiene una longitud de: %d pasos\n", distancia_final);
 }
