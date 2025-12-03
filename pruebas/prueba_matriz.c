@@ -28,8 +28,8 @@ int **crear_laberinto(int, int);
 void liberar_laberinto(int **, int );
 void imprimir_matriz(int **, int, int, Coordenadas, Coordenadas, Coordenadas *);
 int movimientos_validos(int, int);
-bool es_valido(int , int , int , int , bool **);
 void bfs(Coordenadas, Coordenadas, int, int);
+bool es_valido(int , int , int , int , bool **);
 int movimientos_validos(int, int);
 void gameplay(Coordenadas *, Coordenadas, Coordenadas);
 
@@ -68,14 +68,15 @@ int main(){
         }
         
         if(num < 4){
-            int **laberinto = crear_laberinto(fila_usuario, columna_usuario);
+            laberinto = crear_laberinto(fila_usuario, columna_usuario);
 
             Coordenadas entrada = {1, 1};
             Coordenadas salida = {fila_global - 2, columna_global - 2};
+            Coordenadas jugador = entrada;
 
 
             if(num == 3){
-                gameplay(&entrada, entrada, salida);
+                gameplay(&jugador, entrada, salida);
             } else{
                 bfs(entrada, salida, fila_global, columna_global);
 
@@ -83,70 +84,12 @@ int main(){
             }
 
             liberar_laberinto(laberinto, columna_global);
+            laberinto = NULL;
         }
 
     } while (1);
 
     return 0;
-}
-
-void intercambio_coordenadas(Coordenadas *dir_A, Coordenadas *dir_B){
-        Coordenadas temp = *dir_A;
-        *dir_A = *dir_B;
-        *dir_B = temp;
-}
-
-void mezclar_coordenadas(Coordenadas dir[], size_t tamanho){
-    for(size_t i = 0; i < tamanho - 1; i++){
-        size_t j = i + (rand() % (tamanho - i));
-        intercambio_coordenadas(&dir[i], &dir[j]);
-    }
-}
-
-void generar_caminos(int pos_y, int pos_x){
-    laberinto[pos_y][pos_x] = 0;
-
-    size_t tam_dir = sizeof(direccion) / sizeof(direccion[0]);
-
-    mezclar_coordenadas(direccion, tam_dir);
-
-    for(size_t i = 0; i < tam_dir; i++){
-        int dirX = direccion[i].dir_x;
-        int dirY = direccion[i].dir_y;
-        int newX = pos_x + dirX;
-        int newY = pos_y + dirY;
-        
-        if (newX >= 1 && newX < fila_global - 1 && newY >= 1 && newY < columna_global - 1){
-            if(laberinto[newY][newX] == 1){
-                laberinto[pos_y + dirY/2][pos_x + dirX/2] = 0;
-                generar_caminos(newY, newX);
-            }
-        }
-    }
-}
-
-void romper_paredes(int ancho, int alto){
-    int cantidad = (ancho * alto) / 20;
-    for(size_t i = 0; i < cantidad; i++){
-        int posX = (rand() % (ancho - 2)) + 1;
-        int posY = (rand() % (alto - 2)) + 1;
-        if(laberinto[posY][posX] == 1){
-            int libres = 0;
-            size_t tam_mov = sizeof(movimientos) / sizeof(movimientos[0]);
-            for(size_t k = 0; k < tam_mov; k++){
-                int dirX = movimientos[k].dir_x;
-                int dirY = movimientos[k].dir_y;
-                int newX = posX + dirX;
-                int newY = posY + dirY;
-                if(laberinto[newY][newX] == 0){
-                    libres++;
-                }
-            }
-            if(libres >= 1 && libres <= 2){
-                laberinto[posY][posX] = 0;
-            }
-        }
-    }
 }
 
 int **crear_laberinto(int ancho, int alto){
@@ -171,6 +114,65 @@ int **crear_laberinto(int ancho, int alto){
     return laberinto;
 }
 
+void generar_caminos(int pos_y, int pos_x){
+    laberinto[pos_y][pos_x] = 0;
+
+    size_t tam_dir = sizeof(direccion) / sizeof(direccion[0]);
+
+    mezclar_coordenadas(direccion, tam_dir);
+
+    for(size_t i = 0; i < tam_dir; i++){
+        int dirX = direccion[i].dir_x;
+        int dirY = direccion[i].dir_y;
+        int newX = pos_x + dirX;
+        int newY = pos_y + dirY;
+        
+        if (newX >= 1 && newX < fila_global - 1 && newY >= 1 && newY < columna_global - 1){
+            if(laberinto[newY][newX] == 1){
+                laberinto[pos_y + dirY/2][pos_x + dirX/2] = 0;
+                generar_caminos(newY, newX);
+            }
+        }
+    }
+}
+
+void mezclar_coordenadas(Coordenadas dir[], size_t tamanho){
+    for(size_t i = 0; i < tamanho - 1; i++){
+        size_t j = i + (rand() % (tamanho - i));
+        intercambio_coordenadas(&dir[i], &dir[j]);
+    }
+}
+
+void intercambio_coordenadas(Coordenadas *dir_A, Coordenadas *dir_B){
+        Coordenadas temp = *dir_A;
+        *dir_A = *dir_B;
+        *dir_B = temp;
+}
+
+void romper_paredes(int ancho, int alto){
+    int cantidad = (ancho * alto) / 20;
+    for(size_t i = 0; i < cantidad; i++){
+        int posX = (rand() % (ancho - 2)) + 1;
+        int posY = (rand() % (alto - 2)) + 1;
+        if(laberinto[posY][posX] == 1){
+            int libres = 0;
+            size_t tam_mov = sizeof(movimientos) / sizeof(movimientos[0]);
+            for(size_t k = 0; k < tam_mov; k++){
+                int dirX = movimientos[k].dir_x;
+                int dirY = movimientos[k].dir_y;
+                int newX = posX + dirX;
+                int newY = posY + dirY;
+                if(laberinto[newY][newX] == 0){
+                    libres++;
+                }
+            }
+            if(libres >= 1){
+                laberinto[posY][posX] = 0;
+            }
+        }
+    }
+}
+
 void liberar_laberinto(int **laberinto, int alto){
     for (size_t i = 0; i < alto; i++) {
         free(laberinto[i]);
@@ -179,11 +181,12 @@ void liberar_laberinto(int **laberinto, int alto){
 }
 
 void imprimir_matriz(int **laberinto, int ancho, int alto, Coordenadas entrada, Coordenadas salida, Coordenadas *jugador){
-    printf("\nLaberinto %d x %d\n", ancho, alto);
     if(jugador != NULL){
+        //limpiar_consola();
+        //fflush(stdout);
         printf("Modo Juego!");
     }
-    printf("\n");
+    printf("\nLaberinto %d x %d\n", ancho, alto);
 
     for(int i = 0; i < alto; i++){
         for (int j = 0; j < ancho; j++){
@@ -204,30 +207,10 @@ void imprimir_matriz(int **laberinto, int ancho, int alto, Coordenadas entrada, 
         }
         printf("\n");
     }
-    /*if(jugador != NULL){
-        #ifdef _WIN32
-            system("cls");
-        #else
-            system("clear");
-        #endif
-    }*/
 
     if(jugador == NULL){
     printf("\nObs: Se imprime un Laberinto de medida (Ancho + 1) x (Alto + 1) para que tenga paredes exteriores\n");
     }
-}
-
-bool es_valido(int fila, int col, int fila_global, int columna_global, bool **visitado){
-    if(fila < 0 || fila >= columna_global || col < 0 || col >= fila_global){
-        return false;
-    }
-    if(laberinto[fila][col] == 1){
-        return false;
-    }
-    if(visitado[fila][col]){
-        return false;
-    }
-    return true;
 }
 
 void bfs(Coordenadas entrada, Coordenadas salida, int fila_global, int columna_global){
@@ -307,6 +290,19 @@ void bfs(Coordenadas entrada, Coordenadas salida, int fila_global, int columna_g
     printf("\nEl camino mas corto tiene una longitud de: %d pasos\n", distancia_final);
 }
 
+bool es_valido(int fila, int col, int fila_global, int columna_global, bool **visitado){
+    if(fila < 0 || fila >= columna_global || col < 0 || col >= fila_global){
+        return false;
+    }
+    if(laberinto[fila][col] == 1){
+        return false;
+    }
+    if(visitado[fila][col]){
+        return false;
+    }
+    return true;
+}
+
 //Opcional
 void gameplay(Coordenadas *jugador, Coordenadas entrada, Coordenadas salida){
     char tecla;
@@ -315,8 +311,6 @@ void gameplay(Coordenadas *jugador, Coordenadas entrada, Coordenadas salida){
     printf("\nModo Juego\n");
     printf("Usa W(arriba) - S(abajo) - A(izquierda) - D(derecha)\n");
     printf("Para salir presiona Q\n");
-
-    while(getchar() != '\n');
 
     while (juego_activo){
 
@@ -342,9 +336,8 @@ void gameplay(Coordenadas *jugador, Coordenadas entrada, Coordenadas salida){
             case 'd': indice_movimiento = 2; break;
             case 'a': indice_movimiento = 3; break;
             default:
-                printf("Tecla incorrecta\nEnter para continuar\n");
-                while(getchar() != '\n');
-                getchar();
+                printf("Tecla incorrecta. Intente de nuevo\n");
+                continue;
         }
 
         int nuevoX = jugador->dir_x + movimientos[indice_movimiento].dir_x;
@@ -355,9 +348,7 @@ void gameplay(Coordenadas *jugador, Coordenadas entrada, Coordenadas salida){
             jugador->dir_x = nuevoX;
             jugador->dir_y = nuevoY;
         }else{
-            printf("\nMovimiento invalido, no puede atravesar paredes\nEnter para Continuar\n");
-            while(getchar() != '\n');
-            getchar();
+            printf("\nMovimiento invalido, no puede atravesar paredes\n");
         }
     }
 }
