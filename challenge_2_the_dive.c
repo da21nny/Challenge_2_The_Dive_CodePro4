@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <ctype.h>
 
-#define JUGADOR "😊" // 😊 o J
 #define ENTRADA "🚪" // 🚪 o E
 #define SALIDA "🏁" // 🏁 o S
 #define PARED "⬜️" // ⬜️ o #
@@ -26,17 +25,15 @@ Coordenadas direccion[] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
 Coordenadas movimientos[] = {{0,1}, {0,-1}, {1,0}, {-1,0}}; // 0{W} - 1{S} - 2{D} - 3{A} 
 
 //Prototipo de funciones
-int **crear_laberinto(int fila, int columna, int seguro);
+int **crear_laberinto(int fila, int columna);
 void generar_caminos(int pos_y, int pos_x);
 void mezclar_coordenadas(Coordenadas dir[], size_t tamanho);
 void intercambio_coordenadas(Coordenadas *dir_A, Coordenadas *dir_B);
 void romper_paredes(int fila, int columna);
 void bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna);
-void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada, Coordenadas salida, Coordenadas *jugador);
+bool es_valido(int newFila, int newCol, int fila, int columna, bool **visitado);
+void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada, Coordenadas salida);
 void liberar_laberinto(int **laberinto, int columna);
-int movimientos_validos(int nuevoX, int nuevoY);
-void gameplay(Coordenadas jugador, Coordenadas entrada, Coordenadas salida);
-bool es_valido(int newFila, int newCol, int fila, int columna, bool **visitados);
 void medir_rendimiento(clock_t inicio, clock_t post_creacion, clock_t fin);
 
 // Funcion Principal o MAIN
@@ -44,16 +41,15 @@ int main(int argc, char *argv[]){
     srand(time(NULL));
 
     int numero;
-    int seguro;
 
     printf("Bienvenido al juego del Laberinto.\nDetalles a tener en cuenta\n");
-    printf("Jugador : '%s' - Entrada : '%s' - Salida : '%s' - Pared: '%s' - Camino Correcto : '%s' - Camino : '%s'.\n", JUGADOR, ENTRADA, SALIDA, PARED, CORRECTO, CAMINO);
+    printf("Entrada : '%s' - Salida : '%s' - Pared: '%s' - Camino Correcto : '%s' - Camino : '%s'.\n", ENTRADA, SALIDA, PARED, CORRECTO, CAMINO);
 
     do{
-        printf("\nMenu:\n1. Para ingresar fila y columna del Laberinto\n2. Para mostrar laberinto de tamaño fijo (10x10)\n3. Para jugar al Laberinto\n0. Para salir");
-        printf("\nElija 1, 2 o 3 - 0 Para Salir: ");
+        printf("\nMenu:\n1. Para ingresar fila y columna del Laberinto\n2. Para mostrar laberinto de tamaño fijo (10x10)\n0. Para salir");
+        printf("\nElija 1 o 2 - 0 Para Salir: ");
         scanf("%d", &numero);
-        if(numero == 1 || numero == 3){
+        if(numero == 1){
             printf("Ingrese fila : ");
             scanf("%d", &fila);
             printf("Ingrese columna : ");
@@ -68,31 +64,22 @@ int main(int argc, char *argv[]){
             printf("Numero incorrecto, ingrese de vuelta.\n");
             continue;
         }
-
-        printf("\n1- Modo Seguro (Unico Camino)\n2- Modo aleatorio (Multiples Caminos)\n");
-        printf("\nIngrese numero : ");
-        scanf("%d", &seguro);
         
         if(fila % 2 == 0) fila += 1;
         if(columna % 2 == 0) columna += 1;
 
         clock_t inicio = clock();
-        int **laberinto = crear_laberinto(fila, columna, seguro);
+        int **laberinto = crear_laberinto(fila, columna);
         clock_t post_creacion = clock();
 
         Coordenadas entrada = {1, 1};
         Coordenadas salida = {fila - 2, columna - 2};
-        Coordenadas jugador = {1,1};
 
-        if(numero == 3){
-            gameplay(jugador, entrada, salida);
-        } else{
-            bfs(entrada, salida, fila, columna);
-            clock_t fin = clock();
-            imprimir_matriz(laberinto, fila, columna, entrada, salida, NULL);
-            medir_rendimiento(inicio, post_creacion, fin);
-        }
-
+        bfs(entrada, salida, fila, columna);
+        clock_t fin = clock();
+        imprimir_matriz(laberinto, fila, columna, entrada, salida);
+        medir_rendimiento(inicio, post_creacion, fin);
+        
         liberar_laberinto(laberinto, columna);
     
     } while (1);
@@ -101,7 +88,7 @@ int main(int argc, char *argv[]){
 }
 
 // Funcion que crea un laberinto llenos de 1 (Paredes) de tamaño MxN
-int **crear_laberinto(int fila, int columna, int seguro){
+int **crear_laberinto(int fila, int columna){
     laberinto = (int **)malloc(fila * sizeof(int *));
     for(size_t i = 0; i < fila; i++){
         laberinto[i] = (int *)malloc(columna * sizeof(int));
@@ -111,10 +98,6 @@ int **crear_laberinto(int fila, int columna, int seguro){
     }
     int inicio_x = 1, inicio_y = 1;
     generar_caminos(inicio_y, inicio_x);
-
-    if(seguro == 2){
-        romper_paredes(fila, columna);
-    }
 
     return laberinto;
 }
@@ -157,31 +140,6 @@ void intercambio_coordenadas(Coordenadas *dir_A, Coordenadas *dir_B){
         *dir_B = temp;
 }
 
-//Funcion opcional para generar mas caminos alternativos en el laberinto
-void romper_paredes(int fila, int columna){
-    int cantidad = (fila * columna) / 20;
-    for(size_t i = 0; i < cantidad; i++){
-        int posX = (rand() % (fila - 2)) + 1;
-        int posY = (rand() % (columna - 2)) + 1;
-        if(laberinto[posY][posX] == 1){
-            int libres = 0;
-            size_t tam_mov = sizeof(movimientos) / sizeof(movimientos[0]);
-            for(size_t k = 0; k < tam_mov; k++){
-                int dirX = movimientos[k].dir_x;
-                int dirY = movimientos[k].dir_y;
-                int newX = posX + dirX;
-                int newY = posY + dirY;
-                if(laberinto[newY][newX] == 0){
-                    libres++;
-                }
-            }
-            if(libres >= 1 && libres <= 2){
-                laberinto[posY][posX] = 0;
-            }
-        }
-    }
-}
-
 //Funcion para liberar laberinto en memoria.
 void liberar_laberinto(int **laberinto, int columna){
     for (size_t i = 0; i < columna; i++) {
@@ -191,17 +149,12 @@ void liberar_laberinto(int **laberinto, int columna){
 }
 
 //Funcion que imprime el laberinto en consola.
-void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada, Coordenadas salida, Coordenadas *jugador){
+void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada, Coordenadas salida){
     printf("\nLaberinto %d x %d\n", fila, columna);
-    if(jugador != NULL){
-        printf("Modo Juego!");
-    }
     printf("\n");
     for(int i = 0; i < columna; i++){
         for (int j = 0; j < fila; j++){
-            if (jugador !=NULL && i == jugador->dir_y && j == jugador->dir_x){
-                printf(JUGADOR);
-            }else if (i == entrada.dir_y && j == entrada.dir_x){
+            if (i == entrada.dir_y && j == entrada.dir_x){
                 printf(ENTRADA);
             }
             else if (i == salida.dir_y && j == salida.dir_x){
@@ -217,9 +170,8 @@ void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada
         printf("\n");
     }
 
-    if(jugador == NULL){
     printf("\nObs: Se imprime un Laberinto de medida (fila + 1) x (columna + 1) para que tenga paredes exteriores\n");
-    }
+
 }
 
 //Funcion BFS ...
@@ -324,71 +276,4 @@ void medir_rendimiento(clock_t inicio, clock_t post_creacion, clock_t fin){
     printf("\nTiempo de Creacion del laberinto : %.4f segundos", tiempo_creacion);
     printf("\nTiempo de Busqueda BFS : %.4f segundos", tiempo_bfs);
     printf("\nTiempo de generacion + resolucion; %.4f segundos.\n", tiempo_total);
-}
-
-//Opcional. Juego que permite al usuario manejarse dentro del laberinto.
-void gameplay(Coordenadas jugador, Coordenadas entrada, Coordenadas salida){
-    char tecla;
-    int juego_activo = 1;
-
-    printf("\nModo Juego\n");
-    printf("Usa W(arriba) - S(abajo) - A(izquierda) - D(derecha)\n");
-    printf("Para salir presiona Q\n");
-
-    while(getchar() != '\n');
-
-    while (juego_activo){
-
-        imprimir_matriz(laberinto, fila, columna, entrada, salida, &jugador);
-
-        if(jugador.dir_x == salida.dir_x && jugador.dir_y == salida.dir_y){
-            printf("\nFelicidades, llegaste a la salida\n");
-            break;
-        }   
-
-        printf("Movimiento (W/S/D/A) o Q para salir : ");
-        scanf(" %c", &tecla);
-
-
-        if(tolower(tecla) == 'q'){
-            printf("\nSaliendo del Juego\n");
-            break;
-        }
-
-        int indice_movimiento = -1;
-        switch (tolower(tecla)){
-            case 'w': indice_movimiento = 1; break;
-            case 's': indice_movimiento = 0; break;
-            case 'd': indice_movimiento = 2; break;
-            case 'a': indice_movimiento = 3; break;
-            default:
-                printf("Tecla incorrecta\nEnter para continuar\n");
-                continue;
-        }
-
-        int nuevoX = jugador.dir_x + movimientos[indice_movimiento].dir_x;
-        int nuevoY = jugador.dir_y + movimientos[indice_movimiento].dir_y;
-        
-
-        if(movimientos_validos(nuevoX, nuevoY)){
-            jugador.dir_x = nuevoX;
-            jugador.dir_y = nuevoY;
-        }else{
-            printf("\nMovimiento invalido, no puede atravesar paredes\n");
-            continue;
-        }
-    }
-}
-
-//Funcion que valida los movimientos que el jugador hace dentro del laberinto.
-int movimientos_validos(int nuevoX, int nuevoY){
-    if(nuevoX < 0 || nuevoX >= fila || nuevoY < 0 || nuevoY >= columna){ 
-        return 0;
-    }
-
-    if (laberinto[nuevoY][nuevoX] == 1){
-        return 0;
-    }
-    
-    return 1;    
 }
