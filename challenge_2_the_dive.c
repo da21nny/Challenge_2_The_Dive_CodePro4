@@ -4,7 +4,6 @@
 #include <time.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <conio.h>
 
 #define JUGADOR "😊" // 😊 o J
 #define ENTRADA "🚪" // 🚪 o E
@@ -329,6 +328,7 @@ void medir_rendimiento(clock_t inicio, clock_t post_creacion, clock_t fin){
 
 //Opcional. Juego que permite al usuario manejarse dentro del laberinto.
 void gameplay(Coordenadas jugador, Coordenadas entrada, Coordenadas salida){
+    char tecla;
     int juego_activo = 1;
 
     printf("\nModo Juego\n");
@@ -347,15 +347,16 @@ void gameplay(Coordenadas jugador, Coordenadas entrada, Coordenadas salida){
         }   
 
         printf("Movimiento (W/S/D/A) o Q para salir : ");
-        char tecla = tolower(getch());
+        scanf(" %c", &tecla);
 
-        if(tecla == 'q'){
+
+        if(tolower(tecla) == 'q'){
             printf("\nSaliendo del Juego\n");
             break;
         }
 
         int indice_movimiento = -1;
-        switch (tecla){
+        switch (tolower(tecla)){
             case 'w': indice_movimiento = 1; break;
             case 's': indice_movimiento = 0; break;
             case 'd': indice_movimiento = 2; break;
