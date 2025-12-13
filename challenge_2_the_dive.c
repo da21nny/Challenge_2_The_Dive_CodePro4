@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+// Definicion de constantes para imprimir el laberinto
 #define ENTRADA "🚪" // 🚪 o E
 #define SALIDA "🏁" // 🏁 o S
 #define PARED "⬜️" // ⬜️ o #
@@ -13,15 +14,15 @@
 
 // Estructura que contiene Eje X, Eje Y, distancia 
 typedef struct{
-    int dir_x;
-    int dir_y;
-    int dist;
-} Coordenadas;
+    int dir_x;  //Direccion X (Columna)
+    int dir_y;  //Direccion Y (Fila)
+    int dist;   //Distancia
+} Coordenadas; // Estructura Coordenadas
 
 // Variables Globales
-int **laberinto;
-int fila, columna;
-Coordenadas direccion[] = {{0,2}, {0,-2}, {2,0}, {-2,0}};
+int **laberinto; //Matriz del laberinto (es un Puntero a un puntero)
+int fila, columna; //Tamaño del laberinto
+Coordenadas direccion[] = {{0,2}, {0,-2}, {2,0}, {-2,0}}; // 0{W} - 1{S} - 2{D} - 3{A}
 Coordenadas movimientos[] = {{0,1}, {0,-1}, {1,0}, {-1,0}}; // 0{W} - 1{S} - 2{D} - 3{A} 
 
 //Prototipo de funciones
@@ -38,59 +39,56 @@ void medir_rendimiento(clock_t inicio, clock_t post_creacion, clock_t fin);
 
 // Funcion Principal o MAIN
 int main(int argc, char *argv[]){
-    srand(time(NULL));
-
-    int numero;
-
-    if(argc == 1){
+    srand(time(NULL)); // Inicializar semilla para numeros aleatorios
+    if(argc == 1){ //Tamaño por defecto 10x10
         fila = 10;
         columna = 10;
-    } else if (argc == 3){
+    } else if (argc == 3){ //Tamaño ingresado por el usuario
         fila = atoi(argv[1]);
         columna = atoi(argv[2]);
         if (fila <= 4 || columna <= 4){
-            printf("\nFila o Columna debe ser mayor a 4");
+            printf("\nFila o Columna debe ser mayor a 4"); //Avisa al usuario que el tamaño del laberinto es muy pequeño
             return 1;
         }
-        printf("Tamaño ingresado: %d x %d.", fila, columna);
-    } else{
-        printf("El programa requiere 2 argumentos\n");
+        printf("Tamaño ingresado: %d x %d.", fila, columna); //Muestra el tamaño ingresado por el usuario
+    } else{ //Validacion de argumentos
+        printf("El programa requiere 2 argumentos\n"); 
         printf("Ejemplo ./programa 20 20\n");
         return 1;
     }
-        
+    // Asegurar que las dimensiones sean impares
     if(fila % 2 == 0) fila += 1;
     if(columna % 2 == 0) columna += 1;
 
-    clock_t inicio = clock();
-    int **laberinto = crear_laberinto(fila, columna);
-    clock_t post_creacion = clock();
+    clock_t inicio = clock(); // Medir tiempo de inicio
+    int **laberinto = crear_laberinto(fila, columna); // Crear laberinto. Obs: Laberinto se maneja de esta manera (y,x) = (fila,columna)
+    clock_t post_creacion = clock(); // Medir tiempo despues de crear laberinto
 
-    Coordenadas entrada = {1, 1};
-    Coordenadas salida = {fila - 2, columna - 2};
+    Coordenadas entrada = {1, 1}; // Entrada fija en (1,1)
+    Coordenadas salida = {fila - 2, columna - 2}; // Salida fija en (fila-2, columna-2)
 
-    bfs(entrada, salida, fila, columna);
-    clock_t fin = clock();
+    bfs(entrada, salida, fila, columna); // Ejecutar BFS para encontrar el camino
+    clock_t fin = clock(); // Medir tiempo final
 
-    imprimir_matriz(laberinto, fila, columna, entrada, salida);
-    medir_rendimiento(inicio, post_creacion, fin);
+    imprimir_matriz(laberinto, fila, columna, entrada, salida); // Imprimir el laberinto con el camino encontrado
+    medir_rendimiento(inicio, post_creacion, fin); // Medir y mostrar rendimiento
         
-    liberar_laberinto(laberinto, columna);
+    liberar_laberinto(laberinto, columna); // Liberar memoria del laberinto
     
     return 0;
 }
 
 // Funcion que crea un laberinto llenos de 1 (Paredes) de tamaño MxN
 int **crear_laberinto(int fila, int columna){
-    laberinto = (int **)malloc(fila * sizeof(int *));
-    for(size_t i = 0; i < fila; i++){
-        laberinto[i] = (int *)malloc(columna * sizeof(int));
-        for(size_t j = 0; j < columna; j++){
-            laberinto[i][j] = 1;
+    laberinto = (int **)malloc(fila * sizeof(int *)); //Asignar memoria para filas
+    for(size_t y = 0; y < fila; y++){
+        laberinto[y] = (int *)malloc(columna * sizeof(int)); //Asignar memoria para columnas
+        for(size_t x = 0; x < columna; x++){
+            laberinto[y][x] = 1; //Inicializar todas las posiciones con 1 (Pared)
         }
     }
-    int inicio_x = 1, inicio_y = 1;
-    generar_caminos(inicio_y, inicio_x);
+    int inicio_y = 1, inicio_x = 1; //Posicion inicial para generar caminos
+    generar_caminos(inicio_y, inicio_x); //Generar caminos en el laberinto
 
     return laberinto;
 }
