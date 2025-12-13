@@ -42,48 +42,41 @@ int main(int argc, char *argv[]){
 
     int numero;
 
-    printf("Bienvenido al juego del Laberinto.\nDetalles a tener en cuenta\n");
-    printf("Entrada : '%s' - Salida : '%s' - Pared: '%s' - Camino Correcto : '%s' - Camino : '%s'.\n", ENTRADA, SALIDA, PARED, CORRECTO, CAMINO);
-
-    do{
-        printf("\nMenu:\n1. Para ingresar fila y columna del Laberinto\n2. Para mostrar laberinto de tamaño fijo (10x10)\n0. Para salir");
-        printf("\nElija 1 o 2 - 0 Para Salir: ");
-        scanf("%d", &numero);
-        if(numero == 1){
-            printf("Ingrese fila : ");
-            scanf("%d", &fila);
-            printf("Ingrese columna : ");
-            scanf("%d", &columna);
-        } else if(numero == 2){
-            fila = 10;
-            columna = 10;
-        } else if(numero == 0){
-            printf("\nSaliendo...\n");
-            break;
-        } else{
-            printf("Numero incorrecto, ingrese de vuelta.\n");
-            continue;
+    if(argc == 1){
+        fila = 10;
+        columna = 10;
+    } else if (argc == 3){
+        fila = atoi(argv[1]);
+        columna = atoi(argv[2]);
+        if (fila <= 4 || columna <= 4){
+            printf("\nFila o Columna debe ser mayor a 4");
+            return 1;
         }
+        printf("Tamaño ingresado: %d x %d.", fila, columna);
+    } else{
+        printf("El programa requiere 2 argumentos\n");
+        printf("Ejemplo ./programa 20 20\n");
+        return 1;
+    }
         
-        if(fila % 2 == 0) fila += 1;
-        if(columna % 2 == 0) columna += 1;
+    if(fila % 2 == 0) fila += 1;
+    if(columna % 2 == 0) columna += 1;
 
-        clock_t inicio = clock();
-        int **laberinto = crear_laberinto(fila, columna);
-        clock_t post_creacion = clock();
+    clock_t inicio = clock();
+    int **laberinto = crear_laberinto(fila, columna);
+    clock_t post_creacion = clock();
 
-        Coordenadas entrada = {1, 1};
-        Coordenadas salida = {fila - 2, columna - 2};
+    Coordenadas entrada = {1, 1};
+    Coordenadas salida = {fila - 2, columna - 2};
 
-        bfs(entrada, salida, fila, columna);
-        clock_t fin = clock();
-        imprimir_matriz(laberinto, fila, columna, entrada, salida);
-        medir_rendimiento(inicio, post_creacion, fin);
+    bfs(entrada, salida, fila, columna);
+    clock_t fin = clock();
+
+    imprimir_matriz(laberinto, fila, columna, entrada, salida);
+    medir_rendimiento(inicio, post_creacion, fin);
         
-        liberar_laberinto(laberinto, columna);
+    liberar_laberinto(laberinto, columna);
     
-    } while (1);
-
     return 0;
 }
 
@@ -116,7 +109,7 @@ void generar_caminos(int pos_y, int pos_x){
         int newX = pos_x + dirX;
         int newY = pos_y + dirY;
         
-        if (newX >= 1 && newX < fila && newY >= 1 && newY < columna){
+        if (newX >= 1 && newX < columna && newY >= 1 && newY < fila){
             if(laberinto[newY][newX] == 1){
                 laberinto[pos_y + dirY/2][pos_x + dirX/2] = 0;
                 generar_caminos(newY, newX);
@@ -255,7 +248,7 @@ void bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
 
 //Funcion auxiliar que valida parametros que necesita la funcion BFS 
 bool es_valido(int newFila, int newCol, int fila, int columna, bool **visitado){
-    if(newFila < 0 || newFila >= columna || newCol < 0 || newCol >= fila){
+    if(newFila < 0 || newFila >= fila || newCol < 0 || newCol >= columna){
         return false;
     }
     if(laberinto[newFila][newCol] == 1){
