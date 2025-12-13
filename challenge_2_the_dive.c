@@ -155,18 +155,10 @@ void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada
     printf("\n");
     for(int y = 0; y < fila; y++){
         for (int x = 0; x < columna; x++){
-            if (y == entrada.dir_y && x == entrada.dir_x){
-                printf(ENTRADA); // Imprimir entrada
-            }
-            else if (y == salida.dir_y && x == salida.dir_x){
-                printf(SALIDA); // Imprimir salida
-            }
-            else if(laberinto[y][x] == 2){
-                printf(CORRECTO); // Imprimir camino correcto
-            }
-            else{
-                printf("%s", laberinto[y][x] == 1 ? PARED : CAMINO); // Imprimir pared o camino
-            }
+            if (y == entrada.dir_y && x == entrada.dir_x) printf(ENTRADA); // Imprimir entrada
+            else if (y == salida.dir_y && x == salida.dir_x) printf(SALIDA); // Imprimir salida
+            else if(laberinto[y][x] == 2) printf(CORRECTO); // Imprimir camino correcto
+            else printf("%s", laberinto[y][x] == 1 ? PARED : CAMINO); // Imprimir pared o camino
         }
         printf("\n");
     }
@@ -229,11 +221,9 @@ int bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
 
     if(camino_encontrado){ // Si se encontro el camino
         Coordenadas temp = salida; // Empezar desde la salida
-        bool es_entrada = (temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y); // Verificar si es la entrada
-        while(!es_entrada){ // Mientras no se llegue a la entrada
+        while(!(temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y)){ // Mientras no se llegue a la entrada
             laberinto[temp.dir_y][temp.dir_x] = 2; // Marcar el camino en el laberinto
             temp = caminos[temp.dir_y][temp.dir_x]; // Retroceder al nodo anterior
-            es_entrada = (temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y); // Verificar si es la entrada
         }
     }
 
@@ -250,16 +240,10 @@ int bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
 
 //Funcion auxiliar que valida parametros que necesita la funcion BFS 
 bool es_valido(int newFila, int newCol, int fila, int columna, bool **visitado){
-    if(newFila < 0 || newFila >= fila || newCol < 0 || newCol >= columna){ // Verificar limites del laberinto
-        return false;
-    }
-    if(laberinto[newFila][newCol] == 1){ // Verificar si es una pared
-        return false;
-    }
-    if(visitado[newFila][newCol]){ // Verificar si ya fue visitado
-        return false;
-    }
-    return true;
+    return (newFila >= 0 && newFila < fila && // Verificar limites de fila
+        newCol >= 0 && newCol < columna && // Verificar limites de columna
+        laberinto[newFila][newCol] != 1 && // Verificar que no sea una pared
+        !visitado[newFila][newCol]); // Verificar que no haya sido visitado
 }
 
 //Funcion que mide y muestra el rendimiento del programa
