@@ -2,6 +2,7 @@ pruebas/prueba_matriz.exe
 a.out
 pruebas/prueba_matriz_sin_dist.exe
 challenge_2_the_dive.exe
+.vscode/
 .vscode/launch.json
 .vscode/settings.json
 .vscode/tasks.json
