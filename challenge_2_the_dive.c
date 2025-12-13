@@ -33,7 +33,7 @@ void generar_caminos(int pos_y, int pos_x);
 void mezclar_coordenadas(Coordenadas dir[], size_t tamanho);
 void intercambio_coordenadas(Coordenadas *dir_A, Coordenadas *dir_B);
 void romper_paredes(int fila, int columna);
-void bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna);
+int bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna);
 bool es_valido(int newFila, int newCol, int fila, int columna, bool **visitado);
 void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada, Coordenadas salida);
 void liberar_laberinto(int **laberinto, int columna);
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
             printf("\nFila o Columna debe ser mayor a 4"); //Avisa al usuario que el tamaño del laberinto es muy pequeño
             return 1;
         }
-        printf("Tamaño ingresado: %d x %d.", fila, columna); //Muestra el tamaño ingresado por el usuario
+        printf("Tamaño ingresado: %d x %d.\n", fila, columna); //Muestra el tamaño ingresado por el usuario
     } else{ //Validacion de argumentos
         printf("El programa requiere 2 argumentos\n"); 
         printf("Ejemplo ./programa 20 20\n");
@@ -70,10 +70,19 @@ int main(int argc, char *argv[]){
     Coordenadas entrada = {1, 1}; // Entrada fija en (1,1)
     Coordenadas salida = {columna - 2, fila - 2}; // Salida fija en (columna-2, fila-2) 
 
-    bfs(entrada, salida, fila, columna); // Ejecutar BFS para encontrar el camino
+    int distancia = bfs(entrada, salida, fila, columna); // Ejecutar BFS para encontrar el camino
     double fin = obtener_tiempo(); // Medir tiempo final
 
     imprimir_matriz(laberinto, fila, columna, entrada, salida); // Imprimir el laberinto con el camino encontrado
+
+    if(distancia > 0){ // Si se encontro un camino
+        printf("\n¡Camino encontrado! Distancia: %d pasos\n", distancia);
+    } else { // Si no se encontro un camino
+        printf("\nNo se encontró camino (esto no debería pasar)\n"); 
+    }
+
+    printf("\nObs: Se imprime un Laberinto Impar (fila + 1) x (columna + 1) para que tenga paredes exteriores\n");
+
     medir_rendimiento(inicio, post_creacion, fin); // Medir y mostrar rendimiento
         
     liberar_laberinto(laberinto, fila); // Liberar memoria del laberinto
@@ -161,25 +170,23 @@ void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada
         }
         printf("\n");
     }
-
-    printf("\nObs: Se imprime un Laberinto de medida (fila + 1) x (columna + 1) para que tenga paredes exteriores\n");
 }
 
 //Funcion BFS ...
-void bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
+int bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
     Coordenadas *cola = (Coordenadas *)malloc((fila * columna) * sizeof(Coordenadas)); // Cola dinamica para BFS
     int frente = 0; // Indice del frente de la cola
     int atras = 0; // Indice del final de la cola
 
-    bool **visitado = (bool **)malloc(columna * sizeof(bool *)); // Matriz dinamica para marcar nodos visitados
-    Coordenadas **caminos = (Coordenadas **)malloc(columna * sizeof(Coordenadas *)); // Matriz dinamica para almacenar caminos
+    bool **visitado = (bool **)malloc(fila * sizeof(bool *)); // Matriz dinamica para marcar nodos visitados
+    Coordenadas **caminos = (Coordenadas **)malloc(fila * sizeof(Coordenadas *)); // Matriz dinamica para almacenar caminos
 
-    for(size_t x = 0; x < (size_t)columna; x++){ 
-        visitado[x] = (bool *)calloc(fila, sizeof(bool)); // Inicializar matriz visitado con false
-        caminos[x] = (Coordenadas *)malloc(fila * sizeof(Coordenadas)); // Inicializar matriz caminos
-        for(size_t y = 0; y < (size_t)fila; y++){
-            caminos[x][y].dir_x = -1; // Inicializar caminos con -1
-            caminos[x][y].dir_y = -1; // Inicializar caminos con -1
+    for(size_t y = 0; y < (size_t)fila; y++){ 
+        visitado[y] = (bool *)calloc(columna, sizeof(bool)); // Inicializar matriz visitado con false
+        caminos[y] = (Coordenadas *)malloc(columna * sizeof(Coordenadas)); // Inicializar matriz caminos
+        for(size_t x = 0; x < (size_t)columna; x++){
+            caminos[y][x].dir_x = -1; // Inicializar caminos con -1
+            caminos[y][x].dir_y = -1; // Inicializar caminos con -1
         }
     }
 
@@ -222,17 +229,14 @@ void bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
 
     if(camino_encontrado){ // Si se encontro el camino
         Coordenadas temp = salida; // Empezar desde la salida
-        while(!(temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y)){ // Mientras no se llegue a la entrada
-            temp = caminos[temp.dir_y][temp.dir_x]; // Retroceder en el camino
+        bool es_entrada = (temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y); // Verificar si es la entrada
+        while(!es_entrada){ // Mientras no se llegue a la entrada
+            laberinto[temp.dir_y][temp.dir_x] = 2; // Marcar el camino en el laberinto
+            temp = caminos[temp.dir_y][temp.dir_x]; // Retroceder al nodo anterior
+            es_entrada = (temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y); // Verificar si es la entrada
         }
-
-        temp = salida; // Reiniciar temp a la salida
-        while(!(temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y)){ // Mientras no se llegue a la entrada
-            laberinto[temp.dir_y][temp.dir_x] = 2; // Marcar el camino correcto en el laberinto
-            temp = caminos[temp.dir_y][temp.dir_x]; // Retroceder en el camino
-        }
-        laberinto[entrada.dir_y][entrada.dir_x] = 2; // Marcar la entrada como parte del camino
     }
+
     for(size_t y = 0; y < (size_t)fila; y++){ // Liberar memoria
         free(visitado[y]); // Liberar cada fila de visitado
         free(caminos[y]); // Liberar cada fila de caminos
@@ -241,7 +245,7 @@ void bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
     free(caminos); // Liberar puntero a puntero caminos
     free(cola); // Liberar cola dinamica
 
-    printf("\nEl camino mas corto tiene una longitud de: %d pasos\n", distancia_final);
+    return distancia_final; // Retornar la distancia final
 }
 
 //Funcion auxiliar que valida parametros que necesita la funcion BFS 
