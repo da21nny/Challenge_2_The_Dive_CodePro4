@@ -65,7 +65,7 @@ int main(int argc, char *argv[]){
     clock_t post_creacion = clock(); // Medir tiempo despues de crear laberinto
 
     Coordenadas entrada = {1, 1}; // Entrada fija en (1,1)
-    Coordenadas salida = {fila - 2, columna - 2}; // Salida fija en (fila-2, columna-2)
+    Coordenadas salida = {columna - 2, fila - 2}; // Salida fija en (columna-2, fila-2) 
 
     bfs(entrada, salida, fila, columna); // Ejecutar BFS para encontrar el camino
     clock_t fin = clock(); // Medir tiempo final
