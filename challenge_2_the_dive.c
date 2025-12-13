@@ -34,7 +34,7 @@ void mezclar_coordenadas(Coordenadas dir[], size_t tamanho);
 void intercambio_coordenadas(Coordenadas *dir_A, Coordenadas *dir_B);
 void romper_paredes(int fila, int columna);
 int bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna);
-bool es_valido(int newFila, int newCol, int fila, int columna, bool **visitado);
+bool es_valido(int nueva_fila, int nueva_col, int fila, int columna, bool **visitado);
 void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada, Coordenadas salida);
 void liberar_laberinto(int **laberinto, int columna);
 void medir_rendimiento(double inicio, double post_creacion, double fin);
@@ -50,10 +50,10 @@ int main(int argc, char *argv[]){
         fila = atoi(argv[1]);
         columna = atoi(argv[2]);
         if (fila <= 4 || columna <= 4){
-            printf("\nFila o Columna debe ser mayor a 4"); //Avisa al usuario que el tamaño del laberinto es muy pequeño
+            printf("\nError: Fila y Columna deben ser mayores a 4\n"); //Avisa al usuario que el tamaño del laberinto es muy pequeño
             return 1;
         }
-        printf("Tamaño ingresado: %d x %d.\n", fila, columna); //Muestra el tamaño ingresado por el usuario
+        printf("Generando laberinto de %d x %d...\n", fila, columna); //Muestra el tamaño ingresado por el usuario
     } else{ //Validacion de argumentos
         printf("El programa requiere 2 argumentos\n"); 
         printf("Ejemplo ./programa 20 20\n");
@@ -167,12 +167,11 @@ void imprimir_matriz(int **laberinto, int fila, int columna, Coordenadas entrada
 //Funcion BFS ...
 int bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
     Coordenadas *cola = (Coordenadas *)malloc((fila * columna) * sizeof(Coordenadas)); // Cola dinamica para BFS
-    int frente = 0; // Indice del frente de la cola
-    int atras = 0; // Indice del final de la cola
+    int frente = 0, atras = 0; // Indices para la cola 
 
     bool **visitado = (bool **)malloc(fila * sizeof(bool *)); // Matriz dinamica para marcar nodos visitados
     Coordenadas **caminos = (Coordenadas **)malloc(fila * sizeof(Coordenadas *)); // Matriz dinamica para almacenar caminos
-
+    // Inicializar matrices visitado y caminos
     for(size_t y = 0; y < (size_t)fila; y++){ 
         visitado[y] = (bool *)calloc(columna, sizeof(bool)); // Inicializar matriz visitado con false
         caminos[y] = (Coordenadas *)malloc(columna * sizeof(Coordenadas)); // Inicializar matriz caminos
@@ -181,53 +180,44 @@ int bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
             caminos[y][x].dir_y = -1; // Inicializar caminos con -1
         }
     }
-
+    // Iniciar BFS desde la entrada
     visitado[entrada.dir_y][entrada.dir_x] = true; // Marcar la entrada como visitada
     entrada.dist = 0; // Distancia inicial es 0
     cola[atras++] = entrada; // Encolar la entrada
-
     int distancia_final = -1; // Distancia final del camino
-    bool camino_encontrado = false; // Bandera para indicar si se encontro el camino
-
+    // Bucle principal de BFS
     while (frente < atras){ // Mientras la cola no este vacia
         Coordenadas actual = cola[frente++]; // Desencolar el frente de la cola
-
-        if(actual.dir_x == salida.dir_x && actual.dir_y == salida.dir_y){ // Si se llego a la salida
+        // Verificar si se llego a la salida
+        if(actual.dir_x == salida.dir_x && actual.dir_y == salida.dir_y){
             distancia_final = actual.dist; // Guardar la distancia final
-            camino_encontrado = true; // Marcar que se encontro el camino
             break; // Salir del bucle
         }
-
         size_t tam_mov = sizeof(movimientos) / sizeof(movimientos[0]); // Calcular el tamaño del arreglo de movimientos
-
+        // Explorar los vecinos
         for(size_t i = 0; i < tam_mov; i++){
-            int newFila = actual.dir_y + movimientos[i].dir_y; // Calcular nueva fila
-            int newCol = actual.dir_x + movimientos[i].dir_x; // Calcular nueva columna
+            int nueva_fila = actual.dir_y + movimientos[i].dir_y; // Calcular nueva fila
+            int nueva_col = actual.dir_x + movimientos[i].dir_x; // Calcular nueva columna
+            // Validar la nueva posicion
+            if(es_valido(nueva_fila, nueva_col, fila, columna, visitado)){
+                visitado[nueva_fila][nueva_col] = true; // Marcar como visitado
+                caminos[nueva_fila][nueva_col] = actual; // Guardar el camino
 
-            if(es_valido(newFila, newCol, fila, columna, visitado)){ // Validar nueva posicion
-                visitado[newFila][newCol] = true; // Marcar como visitado
-
-                caminos[newFila][newCol].dir_x = actual.dir_x; // Guardar el camino
-                caminos[newFila][newCol].dir_y = actual.dir_y; // Guardar el camino
-
-                Coordenadas vecino; // Crear nuevo nodo vecino
-                vecino.dir_x = newCol; // Asignar nueva columna
-                vecino.dir_y = newFila; // Asignar nueva fila
-                vecino.dist = actual.dist + 1; // Incrementar distancia
+                Coordenadas vecino = {nueva_col, nueva_fila, actual.dist + 1}; // Crear el vecino con nueva posicion y distancia incrementada
                 cola[atras++] = vecino; // Encolar el vecino
             }
         }
     }
-
-    if(camino_encontrado){ // Si se encontro el camino
+    // Reconstruir el camino si se encontro uno
+    if(distancia_final >= 0){
         Coordenadas temp = salida; // Empezar desde la salida
         while(!(temp.dir_x == entrada.dir_x && temp.dir_y == entrada.dir_y)){ // Mientras no se llegue a la entrada
             laberinto[temp.dir_y][temp.dir_x] = 2; // Marcar el camino en el laberinto
             temp = caminos[temp.dir_y][temp.dir_x]; // Retroceder al nodo anterior
         }
     }
-
-    for(size_t y = 0; y < (size_t)fila; y++){ // Liberar memoria
+    // Liberar memoria dinamica utilizada
+    for(size_t y = 0; y < (size_t)fila; y++){
         free(visitado[y]); // Liberar cada fila de visitado
         free(caminos[y]); // Liberar cada fila de caminos
     }
@@ -239,11 +229,11 @@ int bfs(Coordenadas entrada, Coordenadas salida, int fila, int columna){
 }
 
 //Funcion auxiliar que valida parametros que necesita la funcion BFS 
-bool es_valido(int newFila, int newCol, int fila, int columna, bool **visitado){
-    return (newFila >= 0 && newFila < fila && // Verificar limites de fila
-        newCol >= 0 && newCol < columna && // Verificar limites de columna
-        laberinto[newFila][newCol] != 1 && // Verificar que no sea una pared
-        !visitado[newFila][newCol]); // Verificar que no haya sido visitado
+bool es_valido(int nueva_fila, int nueva_col, int fila, int columna, bool **visitado){
+    return (nueva_fila >= 0 && nueva_fila < fila && // Verificar limites de fila
+        nueva_col >= 0 && nueva_col < columna && // Verificar limites de columna
+        laberinto[nueva_fila][nueva_col] != 1 && // Verificar que no sea una pared
+        !visitado[nueva_fila][nueva_col]); // Verificar que no haya sido visitado
 }
 
 //Funcion que mide y muestra el rendimiento del programa
